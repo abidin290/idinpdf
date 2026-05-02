@@ -3,6 +3,8 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <fstream>
+#include <cstdlib>
 
 namespace fs = std::filesystem;
 
@@ -10,7 +12,19 @@ void print_usage() {
   std::cout
       << "Penggunaan: idinpdf <columns> <rows> [-p <path>] [-o <output>]\n"
       << "       ATAU: idinpdf ktp [-p <path>] [-o <output>]\n"
+      << "       ATAU: idinpdf install (Untuk memunculkan menu klik kanan)\n"
       << "Contoh: idinpdf 2 3 -p \"C:\\foto_kegiatan\" -o hasil.pdf\n";
+}
+
+void calculate_auto_grid(int count, int& cols, int& rows) {
+  if (count <= 1) { cols = 1; rows = 1; }
+  else if (count == 2) { cols = 1; rows = 2; }
+  else if (count <= 4) { cols = 2; rows = 2; }
+  else if (count <= 6) { cols = 2; rows = 3; }
+  else if (count <= 8) { cols = 2; rows = 4; }
+  else if (count <= 9) { cols = 3; rows = 3; }
+  else if (count <= 12) { cols = 3; rows = 4; }
+  else { cols = 3; rows = (count + 2) / 3; }
 }
 
 int main(int argc, char *argv[]) {
@@ -20,6 +34,8 @@ int main(int argc, char *argv[]) {
   }
 
   bool ktp_mode = false;
+  bool auto_fit_mode = false;
+  bool sendto_mode = false;
   int cols = 0, rows = 0;
   int arg_start = 3;
 
@@ -56,56 +72,122 @@ int main(int argc, char *argv[]) {
     return 0;
   }
 
-  if (first_arg == "ktp") {
-    ktp_mode = true;
-    arg_start = 2;
-  } else {
-    if (argc < 3) {
-      print_usage();
-      return 1;
-    }
+  if (first_arg == "install") {
+    std::string exe_path;
     try {
-      cols = std::stoi(argv[1]);
-      rows = std::stoi(argv[2]);
-      if (cols <= 0 || rows <= 0) {
-        std::cout << "Error: Kolom dan baris harus lebih besar dari 0.\n";
-        return 1;
-      }
+        exe_path = fs::canonical(fs::path(argv[0])).string();
     } catch (...) {
-      std::cout << "Error: Kolom dan baris harus berupa angka.\n";
-      print_usage();
-      return 1;
+        exe_path = fs::absolute(fs::path(argv[0])).string();
     }
+    
+    std::string esc_exe;
+    for (char c : exe_path) {
+        if (c == '\\') esc_exe += "\\\\";
+        else esc_exe += c;
+    }
+    std::ofstream vbs("temp_shortcut.vbs");
+    vbs << "Set ws = CreateObject(\"WScript.Shell\")\n";
+    vbs << "Set fso = CreateObject(\"Scripting.FileSystemObject\")\n";
+    vbs << "stFolder = ws.SpecialFolders(\"SendTo\")\n";
+    vbs << "On Error Resume Next\n";
+    vbs << "fso.DeleteFile stFolder & \"\\IdinPDF*.lnk\"\n";
+    vbs << "On Error GoTo 0\n";
+    
+    // 1. KTP
+    vbs << "Set link = ws.CreateShortcut(stFolder & \"\\IdinPDF - Mode KTP.lnk\")\n";
+    vbs << "link.TargetPath = \"" << exe_path << "\"\n";
+    vbs << "link.Arguments = \"ktp\"\n";
+    vbs << "link.Save\n";
+    
+    // 2. Auto Grid
+    vbs << "Set link2 = ws.CreateShortcut(stFolder & \"\\IdinPDF - Auto Grid.lnk\")\n";
+    vbs << "link2.TargetPath = \"" << exe_path << "\"\n";
+    vbs << "link2.Arguments = \"auto\"\n";
+    vbs << "link2.Save\n";
+    
+    vbs.close();
+    system("cscript //nologo temp_shortcut.vbs");
+    std::remove("temp_shortcut.vbs");
+    
+    std::cout << "BERHASIL! Fitur 'SendTo' Multi-Shortcut telah terinstal.\n";
+    std::cout << "Sekarang Anda bisa memblok beberapa foto sekaligus, lalu Klik Kanan -> Send To.\n";
+    std::cout << "Anda akan melihat 2 pilihan cerdas IdinPDF siap digunakan!\n";
+    return 0;
   }
 
+
+  
+  if (first_arg == "ktp") {
+      ktp_mode = true;
+      arg_start = 2;
+  } else if (first_arg == "auto") {
+      auto_fit_mode = true;
+      arg_start = 2;
+  } else if (fs::exists(first_arg) && fs::is_regular_file(first_arg)) {
+      sendto_mode = true;
+      auto_fit_mode = true;
+      arg_start = 1;
+  } else {
+      if (argc < 3) {
+        print_usage();
+        return 1;
+      }
+      try {
+          cols = std::stoi(argv[1]);
+          rows = std::stoi(argv[2]);
+          if (cols <= 0 || rows <= 0) {
+              std::cout << "Error: Kolom dan baris harus lebih besar dari 0.\n";
+              return 1;
+          }
+      } catch (...) {
+          std::cout << "Error: Argumen tidak valid.\n";
+          print_usage();
+          return 1;
+      }
+      arg_start = 3;
+  }
+
+  std::vector<std::string> imgs;
   std::string path = fs::current_path().string();
   std::string output = "idinpdf.pdf";
 
-  for (int i = arg_start; i < argc; ++i) {
-    std::string arg = argv[i];
-    if (arg == "-p" || arg == "--path") {
-      if (i + 1 < argc) {
-        path = argv[++i];
+  // Check if there are raw files appended (SendTo mode check after ktp/auto)
+  if (arg_start < argc && fs::exists(argv[arg_start]) && fs::is_regular_file(argv[arg_start])) {
+      sendto_mode = true;
+      for (int i = arg_start; i < argc; ++i) {
+          if (fs::is_regular_file(argv[i])) {
+              imgs.push_back(argv[i]);
+          }
       }
-    } else if (arg == "-o" || arg == "--output") {
-      if (i + 1 < argc) {
-        output = argv[++i];
+      path = fs::path(imgs[0]).parent_path().string();
+  } else {
+      // Normal arg parsing
+      for (int i = arg_start; i < argc; ++i) {
+        std::string arg = argv[i];
+        if (arg == "-p" || arg == "--path") {
+          if (i + 1 < argc) path = argv[++i];
+        } else if (arg == "-o" || arg == "--output") {
+          if (i + 1 < argc) output = argv[++i];
+        }
       }
-    }
+
+      if (!fs::is_directory(path)) {
+        std::cout << "Error: Direktori yang diberikan tidak ditemukan -> " << path << "\n";
+        return 1;
+      }
+      
+      imgs = collect_images(path);
   }
 
-  if (!fs::is_directory(path)) {
-    std::cout << "Error: Direktori yang diberikan tidak ditemukan -> " << path
-              << "\n";
-    return 1;
+  if (auto_fit_mode) {
+      calculate_auto_grid(imgs.size(), cols, rows);
   }
 
   AppConfig config = load_or_create_config(path);
   config.ktp_mode = ktp_mode;
-  std::vector<std::string> imgs = collect_images(path);
 
   if (imgs.empty()) {
-    std::cout << "Tidak ada gambar ditemukan di '" << path << "'.\n";
+    std::cout << "Tidak ada gambar ditemukan.\n";
     return 1;
   }
 
