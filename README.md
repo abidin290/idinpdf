@@ -2,7 +2,7 @@
 
 [![C++17](https://img.shields.io/badge/C++-17-blue.svg)](https://isocpp.org/)
 [![Platform](https://img.shields.io/badge/Platform-Windows-lightgrey.svg)]()
-[![idinpdf]![Static Badge](https://img.shields.io/badge/idinpdf-idinpdf?color=%23f50000)
+[![idinpdf](https://img.shields.io/badge/idinpdf-idinpdf?color=%23f50000)]()
 [![Build](https://img.shields.io/badge/Build-CMake-green.svg)]()
 
 **IdinPDF** adalah utilitas baris perintah (CLI) dan ekstensi menu konteks Windows (*Send To*) yang dirancang khusus untuk mempercepat pembuatan dokumen PDF dari kumpulan foto. Aplikasi ini sangat cocok untuk keperluan **Dokumentasi Kegiatan Desa**, penyusunan laporan lapangan, dan pembuatan **Fotokopi KTP Massal** secara instan.
