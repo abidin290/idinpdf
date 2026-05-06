@@ -2,7 +2,6 @@
 
 [![C++17](https://img.shields.io/badge/C++-17-blue.svg)](https://isocpp.org/)
 [![Platform](https://img.shields.io/badge/Platform-Windows-lightgrey.svg)]()
-[![idinpdf](https://img.shields.io/badge/idinpdf-idinpdf?color=%23f50000)]()
 [![Build](https://img.shields.io/badge/Build-CMake-green.svg)]()
 
 **IdinPDF** adalah utilitas baris perintah (CLI) dan ekstensi menu konteks Windows (*Send To*) yang dirancang khusus untuk mempercepat pembuatan dokumen PDF dari kumpulan foto. Aplikasi ini sangat cocok untuk keperluan **Dokumentasi Kegiatan Desa**, penyusunan laporan lapangan, dan pembuatan **Fotokopi KTP Massal** secara instan.
@@ -13,8 +12,8 @@ Awalnya dibangun menggunakan Python, versi ini telah **sepenuhnya ditulis ulang 
 
 ## ✨ Fitur Utama
 
-- 🚀 **Performa Tinggi:** Ditulis dalam C++ murni tanpa virtual machine (VM) atau interpreter. Kecepatan kompilasi PDF hitungan milidetik.
-- 🔲 **Auto Grid & Custom Grid:** Susun foto ke dalam format Grid kustom (contoh: 2x3, 4x2) via Terminal, atau biarkan aplikasi menghitung otomatis melalui fitur "Auto Grid" di menu klik kanan.
+- 🚀 **Performa Tinggi & Portabel:** Ditulis dalam C++ murni tanpa virtual machine (VM) atau interpreter. Dikompilasi secara *statis* (Static Linking) sehingga 100% mandiri dan tidak memerlukan file DLL bawaan *compiler* (bebas *error libstdc++*).
+- 🔲 **Auto Grid & Custom Grid:** Susun foto ke dalam format Grid kustom (contoh: 2x3, 4x2). Kini dilengkapi dengan fitur "Custom Grid" interaktif langsung dari menu klik kanan.
 - 💳 **Mode KTP Cerdas:** Mode khusus untuk "Fotokopi KTP". Otomatis menyatukan banyak foto KTP warga dengan gambar pendamping (Garuda / `dpnktp.dll`) di bawahnya agar pas dicetak.
 - 🖱️ **Integrasi Windows Send To:** Terintegrasi langsung dengan klik-kanan Windows. Cukup blok (seleksi) banyak foto -> Klik Kanan -> *Send To* -> `IdinPDF` untuk langsung membuat PDF tanpa membuka terminal.
 - ⚙️ **Kustomisasi `config.ini`:** Aplikasi otomatis membuat file konfigurasi di setiap folder foto. Anda bebas mengubah:
@@ -45,20 +44,24 @@ Proyek ini menggunakan sistem build **CMake**. Pastikan komputer Anda telah teri
 
 ---
 
-## 📖 Panduan Penggunaan
+## 📖 Panduan Penggunaan & Instalasi
 
-Aplikasi ini dapat digunakan dalam 2 mode: **Terminal/CLI** atau **Menu Klik Kanan (GUI-less)**.
+Aplikasi ini dapat digunakan dengan 2 cara: **Instalasi Penuh (Installer)** atau **Mode Portable (CLI)**.
 
-### 1. Pemasangan Menu Klik Kanan (Sangat Direkomendasikan)
-Buka terminal dan ketik perintah berikut sekali saja:
-```cmd
-.\idinpdf install
-```
-Aplikasi akan otomatis menyapu bersih *shortcut* lama dan menciptakan 2 menu pintar di dalam menu `Send To` Windows Anda:
-- `IdinPDF - Auto Grid` (Menyusun otomatis semua gambar yang Anda blok ke dalam 1 halaman PDF).
-- `IdinPDF - Mode KTP` (Menyusun KTP dengan garuda di bawahnya).
+### 1. Instalasi Sangat Mudah (Sangat Direkomendasikan)
+Untuk pengguna umum Windows 10 ke atas, cukup jalankan file **`IdinPDF_Installer.exe`** (jika Anda sudah mem-build-nya melalui Inno Setup). 
+Installer otomatis akan:
+- Memasang IdinPDF ke sistem tanpa membutuhkan hak akses Administrator.
+- Menambahkan Path IdinPDF secara otomatis agar bisa dipanggil dari CMD di mana saja.
+- Menciptakan 3 menu ajaib di dalam fitur *Send To* Windows Anda:
 
-**Cara Pakai:** Buka File Explorer -> Seleksi/Blok beberapa foto -> Klik Kanan -> *Send to* -> Pilih *IdinPDF*. File `idinpdf.pdf` akan tercipta secara instan!
+1. `IdinPDF - Auto Grid`: Menyusun otomatis semua gambar yang Anda blok ke dalam 1 halaman PDF.
+2. `IdinPDF - Mode KTP`: Menyusun KTP dengan garuda di bawahnya.
+3. `IdinPDF - Custom Grid` ✨: Akan memunculkan jendela hitam sebentar untuk menanyakan kepada Anda berapa jumlah kolom dan baris yang Anda inginkan secara interaktif!
+
+**Cara Pakai:** Buka File Explorer -> Seleksi/Blok beberapa foto -> Klik Kanan -> *Send to* -> Pilih salah satu menu *IdinPDF*. File PDF akan tercipta secara instan!
+
+*(Bagi developer: Anda masih bisa menginstal shortcut secara manual tanpa installer Inno Setup dengan mengetik perintah `.\idinpdf install` di terminal).*
 
 ### 2. Penggunaan via Terminal (Advanced)
 Jika Anda membutuhkan kontrol penuh (misalnya mendikte secara ketat jumlah kolom dan baris):
