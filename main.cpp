@@ -35,7 +35,6 @@ int main(int argc, char *argv[]) {
 
   bool ktp_mode = false;
   bool auto_fit_mode = false;
-  bool sendto_mode = false;
   int cols = 0, rows = 0;
   int arg_start = 3;
 
@@ -105,6 +104,12 @@ int main(int argc, char *argv[]) {
     vbs << "link2.Arguments = \"auto\"\n";
     vbs << "link2.Save\n";
     
+    // 3. Custom Grid
+    vbs << "Set link3 = ws.CreateShortcut(stFolder & \"\\IdinPDF - Custom Grid.lnk\")\n";
+    vbs << "link3.TargetPath = \"" << exe_path << "\"\n";
+    vbs << "link3.Arguments = \"custom\"\n";
+    vbs << "link3.Save\n";
+    
     vbs.close();
     system("cscript //nologo temp_shortcut.vbs");
     std::remove("temp_shortcut.vbs");
@@ -123,8 +128,20 @@ int main(int argc, char *argv[]) {
   } else if (first_arg == "auto") {
       auto_fit_mode = true;
       arg_start = 2;
+  } else if (first_arg == "custom") {
+      arg_start = 2;
+      std::cout << "\n==================================\n";
+      std::cout << "       IDINPDF CUSTOM GRID        \n";
+      std::cout << "==================================\n";
+      std::cout << "Masukkan jumlah Kolom : ";
+      std::cin >> cols;
+      std::cout << "Masukkan jumlah Baris : ";
+      std::cin >> rows;
+      if (std::cin.fail() || cols <= 0 || rows <= 0) {
+          std::cout << "Error: Input tidak valid. Harus angka > 0.\n";
+          return 1;
+      }
   } else if (fs::exists(first_arg) && fs::is_regular_file(first_arg)) {
-      sendto_mode = true;
       auto_fit_mode = true;
       arg_start = 1;
   } else {
@@ -153,7 +170,6 @@ int main(int argc, char *argv[]) {
 
   // Check if there are raw files appended (SendTo mode check after ktp/auto)
   if (arg_start < argc && fs::exists(argv[arg_start]) && fs::is_regular_file(argv[arg_start])) {
-      sendto_mode = true;
       for (int i = arg_start; i < argc; ++i) {
           if (fs::is_regular_file(argv[i])) {
               imgs.push_back(argv[i]);
